@@ -4,5 +4,5 @@ out = "out"
 libs = ["lib"]
 gas_reports = ["*"]
 
+rpc_endpoints = { base = "https://base.llamarpc.com" }
 
-# See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options

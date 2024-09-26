@@ -7,12 +7,13 @@ import {SBTContract} from "../src/SBTContract.sol";
 import {SBTPriceContract} from "../src/SBTPriceContract.sol";
 import {SaleContract} from "../src/SaleContract.sol";
 
-contract CounterTest is Test {
+contract TestSaleContract is Test {
 
     IERC20 usdcContract;
     SBTContract tokenContract;
     SBTPriceContract priceContract;
     SaleContract saleContract;
+    Vm.Wallet testUser = vm.createWallet("bob's wallet");
 
     function setUp() public {
         usdcContract = IERC20(0x28661511CDA7119B2185c647F23106a637CC074f);
@@ -21,17 +22,7 @@ contract CounterTest is Test {
         saleContract = new SaleContract();
     }
 
-    // function beforeTestSetup(
-    //     bytes4 testSelector
-    // ) public pure returns (bytes[] memory beforeRt) {
-    //     if (testSelector == this.testC.selector) {
-    //         beforeRt = new bytes[](2);
-    //         beforeRt[0] = abi.encodePacked(this.testA.selector);
-    //         beforeRt[1] = abi.encodeWithSignature("setB(uint256)", 1);
-    //     }
-    // }
-
-    function test_Initialize() public {
+    function test_initialize() public{
         assertEq(saleContract.killSwitch(), false);
         assertEq(saleContract.owner(), address(this));
         assertEq(address(saleContract.tokenContract()), address(0));
@@ -39,27 +30,67 @@ contract CounterTest is Test {
         assertEq(address(saleContract.stableContract()), address(0x28661511CDA7119B2185c647F23106a637CC074f));
     }
 
-    function test_Set_state() public {
-        bytes4 selector = bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
-        vm.expectRevert(abi.encodeWithSelector(selector, address(0)));
-        // vm.expectRevert("Contract not set");
-        vm.prank(address(0));
-        // vm.expectEmit();
-        saleContract.setSwitch(true);
-        // assertEq(saleContract.killSwitch(), true);
+    function setState() public returns(uint256 bfcPrice, uint256 usdcPrice){
+        saleContract.setSBTContract(address(tokenContract));
+        saleContract.setSBTPriceContract(address(priceContract));
 
-        // saleContract.setSBTContract(testUser.address);
-        // expect(await saleContract.tokenContract()).to.equal(testUser.address);
+        priceContract.setSBTPrice(200000);
+        priceContract.setInterval(2000);
+        bfcPrice = priceContract.getSBTPriceBFC();
+        usdcPrice = priceContract.getSBTPriceUSDC();
 
-        // await saleContract.setSBTPriceContract(testUser.address);
-        // expect(await saleContract.priceContract()).to.equal(testUser.address);
-        
+        saleContract.setSBTContract(address(tokenContract));
+        saleContract.setSBTPriceContract(address(priceContract));
+        tokenContract.setSeller(address(saleContract));
     }
 
-    function test_error() public {
+    // bytes4 selector = bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
+    //     vm.expectRevert(abi.encodeWithSelector(selector, address(0)));
+    //     vm.expectRevert("Contract not set");
+    //     vm.prank(address(0));
+    //     vm.expectEmit();
+
+    function test_setState() public {
+        setState();
+        saleContract.setSwitch(true);
+        assertEq(saleContract.killSwitch(), true);
+        assertEq(address(saleContract.tokenContract()), address(tokenContract));
+        assertEq(address(saleContract.priceContract()), address(priceContract));
+    }
+
+    function test_failSetState() public{
+        vm.startPrank(address(0));
+
+        bytes4 selector = bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
+        vm.expectRevert(abi.encodeWithSelector(selector, address(0)));
+        saleContract.setSwitch(true);
+        assertEq(saleContract.killSwitch(), false);
+
+        vm.expectRevert(abi.encodeWithSelector(selector, address(0)));
+        saleContract.setSBTContract(address(tokenContract));
+        assertEq(address(saleContract.tokenContract()), address(0));
+
+        vm.expectRevert(abi.encodeWithSelector(selector, address(0)));
+        saleContract.setSBTPriceContract(address(priceContract));
+        assertEq(address(saleContract.priceContract()), address(0));
+
+        vm.stopPrank();
+    }
+
+    function test_failBuySBT() public {
         vm.expectRevert("Contract not set");
         saleContract.buySBTBFC();
-        saleContract.setSwitch(true);
+        vm.expectRevert("Contract not set");
+        saleContract.buySBTUSDC();
+    }
+
+    function test_getPrice() public {
+        setState();
+        assertEq(priceContract.getSBTPriceUSDC(), 2000000);
+    }
+
+    function test_failMint() public{
+        
     }
 
 }
