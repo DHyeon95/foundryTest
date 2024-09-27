@@ -13,7 +13,8 @@ contract TestSaleContract is Test {
     SBTContract tokenContract;
     SBTPriceContract priceContract;
     SaleContract saleContract;
-    Vm.Wallet testUser = vm.createWallet("bob's wallet");
+    address assetHolder = 0x96C8399B3611B038513Fa2Fa8920D5870c0f2390;
+    Vm.Wallet testUser = vm.createWallet("testUser's wallet");
 
     function setUp() public {
         usdcContract = IERC20(0x28661511CDA7119B2185c647F23106a637CC074f);
@@ -43,12 +44,6 @@ contract TestSaleContract is Test {
         saleContract.setSBTPriceContract(address(priceContract));
         tokenContract.setSeller(address(saleContract));
     }
-
-    // bytes4 selector = bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
-    //     vm.expectRevert(abi.encodeWithSelector(selector, address(0)));
-    //     vm.expectRevert("Contract not set");
-    //     vm.prank(address(0));
-    //     vm.expectEmit();
 
     function test_setState() public {
         setState();
@@ -86,11 +81,57 @@ contract TestSaleContract is Test {
 
     function test_getPrice() public {
         setState();
-        assertEq(priceContract.getSBTPriceUSDC(), 2000000);
+        assertEq(priceContract.getSBTPriceUSDC(), 200000);
     }
 
-    function test_failMint() public{
+    function test_failMintBeforeApprve() public{
+        setState();
+        vm.expectRevert("ERC20: insufficient allowance");
+        saleContract.buySBTUSDC();
+        vm.expectRevert("ERC20: insufficient allowance");
+        vm.prank(testUser.addr);
+        saleContract.buySBTUSDC();
+    }
+
+    function test_mintUSDC() public{
+        (, uint256 usdcPrice) = setState();
+        vm.prank(assetHolder);
+        usdcContract.transfer(testUser.addr, 200000000);
+        vm.startPrank(testUser.addr);
+        usdcContract.approve(address(saleContract), usdcPrice);
+        saleContract.buySBTUSDC();
+        vm.stopPrank();
+
+        assertEq(tokenContract.balanceOf(testUser.addr), 1);
+        assertEq(tokenContract.ownerOf(1), testUser.addr);
+        assertEq(saleContract.count(), 1);
+    }
+
+    function test_mintBFC() public{
+        (uint256 bfcPrice, ) = setState();
         
+        vm.deal(testUser.addr, 10000 ether);
+        vm.prank(testUser.addr);
+        saleContract.buySBTBFC{value: bfcPrice}();
+        
+        assertEq(tokenContract.balanceOf(testUser.addr), 1);
+        assertEq(tokenContract.ownerOf(1), testUser.addr);
+        assertEq(saleContract.count(), 1);
+    }
+
+    function test_withdraw() public{
+        vm.expectRevert("ERC20: transfer amount exceeds balance");
+        saleContract.withdrawUSDC(100);
+
+        (, uint256 usdcPrice) = setState();
+        vm.prank(assetHolder);
+        usdcContract.transfer(testUser.addr, 200000000);
+        vm.startPrank(testUser.addr);
+        usdcContract.approve(address(saleContract), usdcPrice);
+        saleContract.buySBTUSDC();
+        vm.stopPrank();
+
+        saleContract.withdrawUSDC(500);
     }
 
 }

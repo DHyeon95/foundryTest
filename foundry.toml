@@ -3,6 +3,8 @@ src = "src"
 out = "out"
 libs = ["lib"]
 gas_reports = ["*"]
+evm_version = 'london'
 
-rpc_endpoints = { base = "https://base.llamarpc.com" }
+
+rpc_endpoints = { base = "https://base.llamarpc.com" , bfc = "https://public-01.testnet.bifrostnetwork.com/rpc"}
 
