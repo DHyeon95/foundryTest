@@ -76,4 +76,7 @@ interface IERC20 {
    * Emits a {Transfer} event.
    */
   function transferFrom(address from, address to, uint256 value) external returns (bool);
+
+  function decimals() external view returns (uint8);
+
 }

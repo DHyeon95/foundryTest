@@ -1,0 +1,92 @@
+// function setSwitch() public {
+//   require(msg.sender == owner);
+
+error OwnableUnauthorizedAccount(address account);
+
+bytes4 selector = bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
+vm.expectRevert(abi.encodeWithSelector(selector, address(0)));
+
+vm.prank(address(0));
+saleContract.setSwitch(true);
+
+
+///
+
+event Transfer(address indexed from, address indexed to, uint256 amount);
+
+function testERC20EmitsTransfer() public {
+    vm.expectEmit(address(myToken));
+    emit MyToken.Transfer(address(this), address(1), 10);
+
+    myToken.transfer(address(1), 10);
+}
+
+///
+
+function setUp() public {
+    rpc = vm.envOr("Bifrost_Test", string("abcd"));
+    owner = vm.envOr("OWNER", address(this));
+    chainID = vm.envOr("Chain_ID" , uint256(0));
+}
+///
+
+function setUp() public {
+    uint256 privateKey = vm.envUint("PRIVATE_KEY");
+}
+
+///
+
+{
+    "apples": [
+      {
+        "sweetness": 7,
+        "sourness": 3,
+        "color": "Red"
+      },
+      {
+        "sweetness": 5,
+        "sourness": 5,
+        "color": "Green"
+      },
+      {
+        "sweetness": 9,
+        "sourness": 1,
+        "color": "Yellow"
+      }
+    ],
+    "name": "Fresh Fruit"
+  }
+
+  ///
+
+  struct Apple {
+    string color;
+    uint8 sourness;
+    uint8 sweetness;
+}
+
+struct FruitStall {
+    Apple[] apples;
+    string name;
+}
+
+///
+
+string memory root = vm.projectRoot();
+string memory path =
+string.concat(root, "/src/test/fixtures/fruitstall.json");
+
+string memory json = vm.readFile(path);
+bytes memory data = vm.parseJson(json);
+FruitStall memory fruitstall = abi.decode(data, (FruitStall));
+
+///
+
+address alice = makeAddr("alice");
+vm.deal(alice, 1 ether);
+log_uint256(alice.balance);
+// 1000000000000000000
+
+deal(address(BtcUSD), alice, 1 ether);
+log_uint256(IERC20(BtcUSD).balanceOf(alice));
+// 1000000000000000000

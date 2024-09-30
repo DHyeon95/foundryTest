@@ -5,6 +5,7 @@ libs = ["lib"]
 gas_reports = ["*"]
 evm_version = 'london'
 
+fs_permissions = [{ access = "read-write", path = "./"}]
 
 rpc_endpoints = { base = "https://base.llamarpc.com" , bfc = "https://public-01.testnet.bifrostnetwork.com/rpc"}
 
